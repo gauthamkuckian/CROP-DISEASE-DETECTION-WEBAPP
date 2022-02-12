@@ -30,6 +30,8 @@ ALLOWED_EXTENSIONS=set(['png','jgp','jpeg','gif'])
 camera=cv2.VideoCapture(0)
 variable_name = randint(0, 100)
 variable_name=str(variable_name)
+size=len(variable_name)
+print(size)
 def generate_frames():
     global capture
     while True:
@@ -104,7 +106,7 @@ def upload():
         print(filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
         flash("Image succesfully uploaded and displayed below")
-        return render_template('display.html',filename=filename)
+        return render_template('display.html',variable_name=filename)
     else:
         flash("Allowed image types are - png,jpg,jpeg,gif.")
         return redirect(request.url)
@@ -115,7 +117,7 @@ def display_image():
     # paths = [os.path.join(path, basename) for basename in files]
     # dis_file=max(paths, key=os.path.getctime)
     # print(dis_file)
-    return render_template('display.html', variable_name = variable_name)
+    return render_template('display.html', variable_name = variable_name,size=size)
 
 if __name__ == '__main__':
     app.run(debug=True)
