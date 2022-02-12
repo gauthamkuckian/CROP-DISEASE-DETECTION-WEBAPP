@@ -12,14 +12,17 @@ switch=0
 
 
 try:
-    os.mkdir('shots')
+    directory = "shots"
+    parent_dir = "C:/Users/Gautham/OneDrive/Desktop/PINAK/static"
+    path = os.path.join(parent_dir, directory)
+    os.mkdir(path)
 except OSError as error:
     pass
 
 
 
 app=Flask(__name__)
-UPLOAD_FOLDER='shots'
+UPLOAD_FOLDER='static/shots'
 app.secret_key='cropdisease'
 app.config['UPLOAD_FOLDER']=UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH']=16*1024*1024
@@ -34,7 +37,7 @@ def generate_frames():
         if success:
             if(capture):
                 capture = 0                
-                p=os.path.sep.join(['shots',"{}.png".format(variable_name)])
+                p=os.path.sep.join(['static/shots',"{}.png".format(variable_name)])
                 cv2.imwrite(p,frame)
 
             try:
@@ -98,6 +101,7 @@ def upload():
         return redirect(request.url)
     if file and allowed_file(file.filename):
         filename=secure_filename(file.filename)
+        print(filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
         flash("Image succesfully uploaded and displayed below")
         return render_template('display.html',filename=filename)
@@ -107,6 +111,10 @@ def upload():
 
 @app.route('/display')
 def display_image():
+    # files = os.listdir(path)
+    # paths = [os.path.join(path, basename) for basename in files]
+    # dis_file=max(paths, key=os.path.getctime)
+    # print(dis_file)
     return render_template('display.html', variable_name = variable_name)
 
 if __name__ == '__main__':
