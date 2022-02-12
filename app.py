@@ -5,13 +5,14 @@ import requests
 import os,sys
 import urllib.request
 from werkzeug.utils import secure_filename
+from random import randint
 global capture, switch
 capture=0
 switch=0
 
 
 try:
-    os.mkdir('./shots')
+    os.mkdir('shots')
 except OSError as error:
     pass
 
@@ -25,8 +26,8 @@ def generate_frames():
         if success:
             if(capture):
                 capture = 0
-                now=datetime.now()
-                p=os.path.sep.join(['shots',"shot_{}.png".format(str(now).replace(":",''))])
+                variable_name = randint(0, 100)
+                p=os.path.sep.join(['shots',"{}.png".format(variable_name)])
                 cv2.imwrite(p,frame)
 
             try:
@@ -38,7 +39,7 @@ def generate_frames():
         else:
             pass  
   
-UPLOAD_FOLDER='static'
+UPLOAD_FOLDER='shots'
 app.secret_key='cropdisease'
 app.config['UPLOAD_FOLDER']=UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH']=16*1024*1024
@@ -57,7 +58,7 @@ def video():
 def tasks():
     global switch,camera
     if request.method =='POST':
-        if request.form.get('click')=='Take Snapshot':
+        if request.form.get('click')=='Capture Image':
             global capture
             capture=1
         elif  request.form.get('stop') == 'Stop/Start':
@@ -71,9 +72,9 @@ def tasks():
                         camera = cv2.VideoCapture(0)
                         switch=1
     elif request.method=='GET':
-        return render_template('index.html')  
+        return render_template('display.html')  
                           
-    return render_template('index.html')   
+    return render_template('display.html')   
 
 @app.route('/upload',methods=['POST'])
 def upload():
@@ -88,10 +89,14 @@ def upload():
         filename=secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
         flash("Image succesfully uploaded and displayed below")
-        return render_template('index.html,filename=filename')
+        return render_template('display.html',filename=filename)
     else:
         flash("Allowed image types are - png,jpg,jpeg,gif.")
         return redirect(request.url)
+
+# @app.route('/display/<filename>')
+# def display_image(filename):
+#     return redirect(url_for('shots',filename=filename),code=301)
 
 if __name__ == '__main__':
     app.run(debug=True)
