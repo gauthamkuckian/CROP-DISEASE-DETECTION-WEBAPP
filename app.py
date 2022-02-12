@@ -16,17 +16,23 @@ try:
 except OSError as error:
     pass
 
-app=Flask(__name__)
-camera=cv2.VideoCapture(0)
 
+
+app=Flask(__name__)
+UPLOAD_FOLDER='shots'
+app.secret_key='cropdisease'
+app.config['UPLOAD_FOLDER']=UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH']=16*1024*1024
+ALLOWED_EXTENSIONS=set(['png','jgp','jpeg','gif'])
+camera=cv2.VideoCapture(0)
+variable_name = randint(0, 100)
 def generate_frames():
     global capture
     while True:
         success,frame=camera.read()
         if success:
             if(capture):
-                capture = 0
-                variable_name = randint(0, 100)
+                capture = 0                
                 p=os.path.sep.join(['shots',"{}.png".format(variable_name)])
                 cv2.imwrite(p,frame)
 
@@ -38,17 +44,16 @@ def generate_frames():
                 pass
         else:
             pass  
-  
-UPLOAD_FOLDER='shots'
-app.secret_key='cropdisease'
-app.config['UPLOAD_FOLDER']=UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH']=16*1024*1024
-ALLOWED_EXTENSIONS=set(['png','jgp','jpeg','gif'])
+
+
+# app = Flask(__name__) # to make the app run without any
+
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.',1)[1].lower() in ALLOWED_EXTENSIONS
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index1.html')
 
 @app.route('/video')
 def video():
@@ -71,8 +76,9 @@ def tasks():
                     else:
                         camera = cv2.VideoCapture(0)
                         switch=1
+        return redirect("/display")
     elif request.method=='GET':
-        return render_template('display.html')  
+        return render_template('display.html')      
                           
     return render_template('display.html')   
 
@@ -94,9 +100,9 @@ def upload():
         flash("Allowed image types are - png,jpg,jpeg,gif.")
         return redirect(request.url)
 
-# @app.route('/display/<filename>')
-# def display_image(filename):
-#     return redirect(url_for('shots',filename=filename),code=301)
+@app.route('/display')
+def display_image():
+    return render_template('display.html', variable_name = variable_name)
 
 if __name__ == '__main__':
     app.run(debug=True)
