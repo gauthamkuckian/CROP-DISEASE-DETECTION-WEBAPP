@@ -26,6 +26,7 @@ app.config['MAX_CONTENT_LENGTH']=16*1024*1024
 ALLOWED_EXTENSIONS=set(['png','jgp','jpeg','gif'])
 camera=cv2.VideoCapture(0)
 variable_name = randint(0, 100)
+variable_name=str(variable_name)
 def generate_frames():
     global capture
     while True:
@@ -53,7 +54,11 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.',1)[1].lower() in ALLOWED_EXTENSIONS
 @app.route('/')
 def index():
-    return render_template('index1.html')
+    return render_template('index.html')
+
+@app.route("/input")
+def input():
+    return render_template("input.html")
 
 @app.route('/video')
 def video():

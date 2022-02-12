@@ -1,0 +1,27 @@
+{%extends 'base.html'%}
+{%block title%}Crop Disease {% endblock title%}
+{%block body%}
+<div id="videoContainer">
+<img src="{{url_for('video')}}" width="50%" id="video_stream"/>
+</div>
+      <form method="post" action="{{ url_for('tasks') }}">
+        <input type="submit" value="Capture Image" name="click"/>
+        </div>
+      </form>
+      <p>
+        {% with messages = get_flashed_messages() %}
+        {%if messages%}
+        <ul>
+          {%for message in messages%}
+          <li>{{message}}</li>
+          {%endfor%}
+        </ul>
+        {%endif%}
+        {%endwith%}
+      </p>
+      <form method="POST" action="/upload" enctype="multipart/form-data">
+      <input type="file" name="file" autocomplete="off" required>
+      <input type="submit" value="Submit" >
+      </form>
+        
+{%endblock body%}
