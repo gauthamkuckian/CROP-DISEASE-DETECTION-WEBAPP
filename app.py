@@ -1,3 +1,4 @@
+from crypt import methods
 from datetime import datetime
 from flask import Flask,render_template,request,Response,flash,request,redirect,url_for
 import cv2
@@ -6,6 +7,12 @@ import os,sys
 import urllib.request
 from werkzeug.utils import secure_filename
 from random import randint
+import tensorflow as tf
+from tensorflow.keras.models import load_model
+from keras.preprocessing import image
+import numpy as np
+import PIL as PIL
+
 global capture, switch
 capture=0
 switch=0
@@ -61,9 +68,10 @@ def allowed_file(filename):
 def index():
     return render_template('index.html')
 
-@app.route("/input")
+@app.route("/input", methods=['GET', 'POST'])
 def input():
-    return render_template("input.html")
+    if methods=='GET':
+        return render_template("input.html")
 
 @app.route('/video')
 def video():
@@ -86,13 +94,13 @@ def tasks():
                     else:
                         camera = cv2.VideoCapture(0)
                         switch=1
-        return redirect("/display")
+        return redirect("/upload")
     elif request.method=='GET':
         return render_template('display.html')      
                           
     return render_template('display.html')   
 
-@app.route('/upload',methods=['POST'])
+@app.route('/upload',methods=['GET','POST'])
 def upload():
     if 'file' not in request.files:
         flash("No file part")
@@ -102,14 +110,19 @@ def upload():
         flash("No image selected for uploading")
         return redirect(request.url)
     if file and allowed_file(file.filename):
+        global filename
         filename=secure_filename(file.filename)
         print(filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
         flash("Image succesfully uploaded and displayed below")
-        return render_template('display.html',variable_name=filename)
+
+        label = processing(filename)
+        print(label)
+
+        return render_template('display.html',variable_name=filename, label=label)
     else:
         flash("Allowed image types are - png,jpg,jpeg,gif.")
-        return redirect(request.url)
+    return render_template("display.html",variable_name=filename, label=label)
 
 @app.route('/display')
 def display_image():
@@ -117,7 +130,39 @@ def display_image():
     # paths = [os.path.join(path, basename) for basename in files]
     # dis_file=max(paths, key=os.path.getctime)
     # print(dis_file)
-    return render_template('display.html', variable_name = variable_name,size=size)
+    label = processing(filename)
+    return render_template('display.html', variable_name = variable_name,size=size, label=label)
+
+
+def processing(filename):
+    name = filename
+
+    model = load_model("model_0.h5")
+
+    model.summary()
+
+    image_path = "static/shots/bg.png"
+    image = tf.keras.preprocessing.image.load_img(image_path, target_size=(256, 256))
+
+    input_arr = tf.keras.preprocessing.image.img_to_array(image)
+    input_arr = np.array([input_arr])
+
+    input_arr = input_arr.astype('float32') / 255
+    predictions = model.predict(input_arr)
+
+    print(f"predictions{predictions}")
+    predicted_class = np.argmax(predictions, axis=-1)
+    print(f"predicted class : {predicted_class}")
+
+    if predicted_class[0] == 0:
+        label = "healthy"
+    elif predicted_class[0] == 1:
+        label = "stemrust"
+    else:
+        label = "leafrust"
+
+    return label
+
 
 if __name__ == '__main__':
     app.run(debug=True)
